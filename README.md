@@ -1,0 +1,158 @@
+# Lab Notebook – Automatic Vinyl Record Flipper
+
+**Team 20 – ECE 445 Senior Design, Spring 2025**  
+**Members:** Riyaan Jain (riyaanj2), Mohammed Alkawai, Alfredo Velasquez  
+**TA:** Chi Zhang
+
+---
+
+## 1. Overview
+
+This project automates the flipping of 7-inch vinyl records after playback, eliminating the need for manual intervention. It uses:
+- An **ESP32** microcontroller
+- **Three servo motors** (2×20kg, 1×35kg torque)
+- A **Hall effect sensor** and **N52 magnet** on the tonearm
+- A custom 2-layer PCB designed in **KiCad**
+
+The system lifts the tonearm, flips the record, and reseats it within **17 seconds**, maintaining a flipping accuracy of **100%** across 50+ consecutive cycles.
+
+---
+
+## 2. Weekly Logs & Summaries
+
+### Weeks 1–2: Ideation & Design Exploration
+- Identified problem: interruption due to manual record flipping
+- Proposed solutions: rotating tray, robotic arm, flipping claw (chosen)
+- Chose ESP32 for multitasking and PWM capabilities
+- Investigated tonearm detection methods (ultrasonic vs. Hall sensor)
+
+### Weeks 3–4: Schematic & PCB Design
+- Designed power rail using LP2950-CZ1 and verified:
+ΔV = (I × Δt) / C → C ≥ 1µF for I = 100mA, Δt = 1µs, ΔV = 100mV
+
+- Added bulk decoupling (10µF) and bypass capacitors (0.1µF)
+- Used IPC-2221 standard to size high-current servo traces (80 mils)
+- Designed servo headers, ESP32 pinout, Hall sensor filtering
+
+### Weeks 5–6: Assembly & Mechanical Tuning
+- Soldered and validated all components on PCB
+- 3D printed clamping arms and adapter cone
+- Verified servo torque:
+τ_required = m × g × r = 0.18kg × 9.81 × 0.15m ≈ 0.265 Nm
+
+- DSServo torque: **0.92 Nm** → 3.5× margin
+
+### Weeks 7–8: Firmware and Signal Integration
+- Programmed ESP32 to generate PWM (GPIO 15, 16, 18)
+- Used state machine for flipping sequence:
+
+- DSServo torque: **0.92 Nm** → 3.5× margin
+
+### Weeks 9–10: System Testing
+- Tested flipping 50+ times under load: **No failures**
+- Sampled voltage every second for 20s:
+Mean = 4.94V, Std Dev = ±0.02V
+
+- Evaluated sensor activation threshold:
+- Magnet field ≥150 Gauss at ~0.62 inches → consistently triggered
+- Partner: Aaron helped fine-tune clamp pressure & friction
+
+### Week 11: Optimization
+- Added soft delay between servo stages to reduce power peaks
+- Identified minor scratches on vinyl from clamp edges
+- Plan: use rubber-lined gripper in future iteration
+
+---
+
+## 3. Key Equations and Engineering Justifications
+
+### Power & Stability
+- **Voltage tolerance:** ±0.1V, tested within ±0.05V
+- **Capacitor Sizing:**
+\[
+C \geq \frac{I \cdot \Delta t}{\Delta V} \Rightarrow C \geq 1 \mu F
+\]
+
+### Servo PWM
+- 50 Hz signal
+- Pulse width 500 µs (0°) to 2500 µs (180°)
+
+### Magnetic Activation Range
+- Neodymium N52 magnet emits ~150 G @ 0.62"
+- Hall sensor threshold verified via test rig
+
+---
+
+## 4. Figures and Diagrams
+
+### Figure 1: Block Diagram  
+![Block Diagram](path_to_block_diagram_image.png)
+
+### Figure 2: Full System on Crosley Cruiser  
+![Full System](path_to_system_image.png)
+
+### Figure 3: Power Schematic (KiCad)  
+![Power Schematic](path_to_power_schematic.png)
+
+### Figure 4: Hall Sensor Magnetic Field vs Distance  
+![Magnetic Field](path_to_hall_sensor_graph.png)
+
+### Figure 5: PCB Layout  
+![PCB Layout](path_to_pcb_layout_image.png)
+
+---
+
+## 5. Tolerance Analysis
+
+- **Current Limit:** Max servo draw 2.1 A → Lab supply 2.5 A = safe
+- **Servo margin of error (angular):** ±1.5°
+- **Tonearm detection misfire:** 0 over 50 trials
+- **Positioning accuracy (reseating):** 100% within <1mm of spindle center (aided by tapered adapter)
+
+---
+
+## 6. Ethical and Safety Notes
+
+- Adhered to IEEE 1100 standards for grounding and regulation
+- Wore PPE during soldering, testing, and servo assembly
+- Avoided misleading or fabricated data per IEEE Ethics §1-6
+- Proper handling of magnets and mechanical parts emphasized in group meetings
+
+---
+
+## 7. TA Signoffs & Notes
+
+- Week 4: Recommended magnet over ultrasonic → implemented  
+- Week 6: Noted jitter in servo → resolved with ramped PWM  
+- Week 10: Mentioned clamp abrasion issue → noted for improvement
+
+---
+
+## 8. Conclusion
+
+This project met all design, safety, and functional requirements. It offers a robust solution for automatic vinyl flipping with:
+- Reliable end-of-playback detection
+- Controlled servo actuation
+- Minimal voltage ripple or thermal instability
+
+Future versions will refine the mechanical clamp and explore compatibility with full-size LPs.
+
+---
+
+## 9. Appendix: Requirements Verification Table
+
+| Requirement                        | Test Method                                  | Result   |
+|-----------------------------------|----------------------------------------------|----------|
+| 5V stable voltage                 | 20s multimeter sample                        | ✅        |
+| Servo torque > 0.3 Nm             | Datasheet and record mass calculation        | ✅        |
+| Clamp alignment                   | Manual inspection + video logs               | ✅        |
+| Hall effect detection             | Magnet test @ 0.62" distance                  | ✅        |
+| PWM accuracy                      | Oscilloscope signal measurement              | ✅        |
+| System thermal stability          | 10 min stress test                           | ✅        |
+| Reseating accuracy                | Measured record misalignment (<1 mm)         | ✅        |
+| False triggering                  | Tested w/o magnet present                    | ✅        |
+
+---
+
+**Last updated:** May 9, 2025
+
